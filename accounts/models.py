@@ -1,0 +1,1 @@
+# Models are defined in companies app to avoid circular imports
