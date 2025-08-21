@@ -120,8 +120,15 @@ class UserViewSet(CompanyIsolationMixin, viewsets.ModelViewSet):
         role_id = request.data.get('role_id')
         
         # Check permissions
-        if not request.user.is_superuser and not hasPermission('ASSIGN_ROLES'):
-            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_superuser:
+            user_roles = UserRole.objects.filter(user=request.user)
+            user_permissions = set()
+            for user_role in user_roles:
+                role_permissions = user_role.role.permissions.all()
+                user_permissions.update([perm.name for perm in role_permissions])
+            
+            if 'ASSIGN_ROLES' not in user_permissions:
+                return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
         
         try:
             # Get role (roles are system-wide now)

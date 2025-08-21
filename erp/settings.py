@@ -1,15 +1,16 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-gk0*cppqd%%!ri-5l#f$vfejqa0^^bt*2t#8x3dd^o^q(k#zer'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-gk0*cppqd%%!ri-5l#f$vfejqa0^^bt*2t#8x3dd^o^q(k#zer')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -61,12 +63,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'erp.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+if os.environ.get('DATABASE_URL'):
+    # Production (Render) - use DATABASE_URL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=f'sqlite:///{BASE_DIR}/db.sqlite3',
+            conn_max_age=600
+        )
     }
-}
+else:
+    # Local development - use PostgreSQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 # REST Framework
 REST_FRAMEWORK = {
@@ -89,6 +106,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    'https://erp-user-management-frontend.vercel.app',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -121,7 +139,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model

@@ -31,6 +31,6 @@ def log_action(user, action, resource_type, resource_id, details, request=None):
         resource_type=resource_type,
         resource_id=resource_id,
         details=details,
-        ip_address=ip_address or 'unknown',
+        ip_address=ip_address or '127.0.0.1',
         user_agent=user_agent or 'unknown'
     )

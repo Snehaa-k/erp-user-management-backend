@@ -1,0 +1,20 @@
+databases:
+  - name: erp-backend-db
+    databaseName: erp_backend
+    user: erp_user
+
+services:
+  - type: web
+    name: erp-backend
+    runtime: python3
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn erp.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: erp-backend-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
